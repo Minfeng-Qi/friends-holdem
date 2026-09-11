@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>好友德州扑克</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- 大厅 -->
+<div id="lobby" class="lobby">
+  <div class="lobby-card">
+    <h1>♠ 好友德州扑克 ♥</h1>
+    <p class="sub">无需注册 · 建个房间号，发给好友就能一起玩</p>
+    <label>你的昵称</label>
+    <input id="nameInput" maxlength="16" placeholder="给自己起个名字" />
+    <label>房间号</label>
+    <div class="room-row">
+      <input id="roomInput" maxlength="8" placeholder="例如 ABCD" style="text-transform:uppercase" />
+      <button id="genRoom" class="btn-ghost" type="button">随机</button>
+    </div>
+    <button id="joinBtn" class="btn-primary">进入牌桌</button>
+    <p class="hint" id="lobbyHint"></p>
+  </div>
+  <div class="lobby-foot">2–6 人 · 起始筹码 10000 · 盲注 50/100</div>
+</div>
+
+<!-- 牌桌 -->
+<div id="game" class="game hidden">
+  <header class="topbar">
+    <div class="room-info">房间 <b id="roomCode">—</b> · <button id="copyLink" class="mini">复制邀请链接</button></div>
+    <div class="phase-pill" id="phaseLabel">等待开始</div>
+    <div class="topbar-right">
+      <button id="voiceBtn" class="mini icon-btn" title="开启语音">🎙️</button>
+      <button id="soundBtn" class="mini icon-btn" title="音效开关">🔊</button>
+      <button id="leaveBtn" class="mini danger">离开</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="table-wrap">
+      <div class="poker-table">
+        <div class="table-center">
+          <div class="community" id="community"></div>
+          <div class="pot" id="pot"><span class="chip-ic"></span><span id="potText">底池 0</span></div>
+          <div class="result" id="result"></div>
+        </div>
+        <div class="seats" id="seats"></div>
+      </div>
+
+      <div class="controls">
+        <div class="turn-banner" id="turnBanner"></div>
+        <div class="waiting-controls hidden" id="waitingControls">
+          <button id="startBtn" class="btn-primary btn-start">开始下一局</button>
+          <span id="waitHint" class="wait-hint"></span>
+        </div>
+        <div class="action-controls hidden" id="actionControls">
+          <button class="act fold" data-act="fold">弃牌</button>
+          <button class="act check" data-act="check">看牌</button>
+          <button class="act call" data-act="call">跟注</button>
+          <div class="raise-box">
+            <input type="range" id="raiseSlider" />
+            <div class="raise-info"><span id="raiseAmt">—</span></div>
+            <button class="act raise" data-act="raise">加注</button>
+          </div>
+          <button class="act allin" data-act="allin">全下</button>
+        </div>
+        <div class="side-controls">
+          <button id="sitOutBtn" class="mini">暂离一局</button>
+          <button id="addBotBtn" class="mini">+ 机器人</button>
+          <button id="removeBotBtn" class="mini">− 机器人</button>
+          <button id="resetBtn" class="mini">重置筹码·重开对局</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="tabs">
+        <button class="tab active" data-tab="chat">聊天</button>
+        <button class="tab" data-tab="log">牌局记录</button>
+      </div>
+      <div class="tab-panel" id="chatPanel">
+        <div class="messages" id="messages"></div>
+        <div class="chat-input">
+          <input id="chatInput" maxlength="300" placeholder="说点什么…" />
+          <button id="sendBtn">发送</button>
+        </div>
+      </div>
+      <div class="tab-panel hidden" id="logPanel">
+        <div class="log-list" id="logList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="fx"></div>
+  <canvas id="confetti"></canvas>
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="sound.js"></script>
+<script src="client.js"></script>
+<script src="voice.js"></script>
+</body>
+</html>

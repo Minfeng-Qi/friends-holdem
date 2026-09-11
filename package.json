@@ -1,0 +1,17 @@
+{
+  "name": "friends-holdem",
+  "version": "1.0.0",
+  "description": "跟好友一起玩的在线德州扑克，无需登录",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test/engine.test.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
