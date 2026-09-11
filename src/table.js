@@ -134,6 +134,7 @@ class Table {
   startHand() {
     const players = this.eligible();
     if (players.length < 2) return { ok: false, error: '至少需要 2 名有筹码的玩家' };
+    if (!players.some(p => !p.isBot)) return { ok: false, error: '真人都已输光，本轮结束。点「重置筹码·重开对局」再来一轮' };
 
     this.handId++;
     this.phase = 'preflop';
@@ -539,6 +540,13 @@ class Table {
     order.forEach((p, i) => { p.position = labels[i]; });
   }
 
+  // 本轮是否结束：真人都输光了（只剩机器人有筹码）
+  matchOver() {
+    if (this.phase !== 'waiting' && this.phase !== 'showdown') return false;
+    const humans = this.activePlayers().filter(p => !p.isBot);
+    return humans.length > 0 && humans.every(h => h.stack <= 0);
+  }
+
   // ---------- 状态输出 ----------
   pushLog(text) {
     this.log.push(text);
@@ -592,8 +600,9 @@ class Table {
       actions,
       lastResult: this.lastResult,
       log: this.log.slice(-20),
-      canStart: this.phase === 'waiting' || this.phase === 'showdown',
+      canStart: (this.phase === 'waiting' || this.phase === 'showdown') && this.eligible().some(p => !p.isBot),
       eligibleCount: this.eligible().length,
+      matchOver: this.matchOver(),
       reset: this.resetInfo(viewerId),
     };
   }

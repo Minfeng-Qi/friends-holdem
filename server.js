@@ -168,7 +168,9 @@ io.on('connection', (socket) => {
     if (!r) return;
     const bots = r.table.bots();
     if (!bots.length) { socket.emit('notice', '没有机器人可移除'); return; }
-    const b = bots[bots.length - 1];
+    // 优先移除：已输光的 > 当前不在牌局中的 > 都在牌局中则等这局结束
+    const b = bots.find(x => x.stack <= 0) || bots.find(x => !x.inHand);
+    if (!b) { socket.emit('notice', '机器人都在这局牌里，等这局结束再移除'); return; }
     const nm = b.name;
     r.table.removePlayer(b.id);
     r.chat.push({ sys: true, text: `机器人 ${nm} 离开了牌桌`, t: Date.now() });

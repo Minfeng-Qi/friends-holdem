@@ -171,6 +171,7 @@ button { font-family: inherit; }
 .act:disabled { opacity: .3; cursor: not-allowed; filter: none; transform: none; box-shadow: none; }
 .side-controls { display: flex; gap: 10px; }
 .btn-start { padding: 14px 30px; }
+.btn-restart { background: linear-gradient(180deg,#e0a340,#b8801f); box-shadow: 0 8px 20px rgba(224,163,64,.35); }
 
 /* ================= 侧栏 ================= */
 .sidebar { width: 310px; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; }

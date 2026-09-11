@@ -212,8 +212,18 @@ function renderControls(state, me) {
   const waiting = $('waitingControls'), action = $('actionControls'), banner = $('turnBanner');
   waiting.classList.add('hidden'); action.classList.add('hidden'); banner.textContent = '';
 
-  if (state.canStart) {
+  if (state.matchOver) {
+    // 真人全输光：不再开局，只给重开入口
     waiting.classList.remove('hidden');
+    $('startBtn').classList.add('hidden');
+    $('restartBtn').classList.remove('hidden');
+    const r = state.reset || {};
+    $('restartBtn').textContent = r.mine && r.total > 1 ? `已同意重开 ${r.count}/${r.total}，等其他人` : '本轮结束 · 重新开始（每人 10000）';
+    $('waitHint').textContent = '💀 你已输光，本轮结束';
+  } else if (state.canStart) {
+    waiting.classList.remove('hidden');
+    $('startBtn').classList.remove('hidden');
+    $('restartBtn').classList.add('hidden');
     const enough = state.eligibleCount >= 2;
     $('startBtn').disabled = !enough;
     $('waitHint').textContent = enough ? (state.phase === 'showdown' ? '本局结束，可开始下一局' : '人齐了，点开始发牌') : '至少需要 2 名有筹码的玩家';
@@ -410,6 +420,7 @@ function confettiBurst() {
 
 // ================= 操作按钮 =================
 $('startBtn').onclick = () => { Sfx.play('click'); socket.emit('start'); };
+$('restartBtn').onclick = () => { Sfx.play('click'); socket.emit('resetVote'); };
 $('actionControls').querySelectorAll('.act').forEach(b => {
   b.onclick = () => {
     const act = b.dataset.act;
