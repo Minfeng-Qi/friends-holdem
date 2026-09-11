@@ -213,21 +213,71 @@ function renderControls(state, me) {
     btn('check').disabled = !a.canCheck;
     const cb = btn('call'); cb.disabled = !a.canCall; cb.textContent = a.canCall ? `跟注 ${a.callAmount}` : '跟注';
     btn('allin').disabled = !a.canAllIn; btn('allin').textContent = `全下 ${a.stack}`;
-    const slider = $('raiseSlider'), rb = btn('raise');
-    if (a.canRaise && a.maxRaiseTo > a.minRaiseTo) {
-      slider.disabled = false; rb.disabled = false;
-      slider.min = a.minRaiseTo; slider.max = a.maxRaiseTo; slider.step = state.bigBlind;
-      if (+slider.value < a.minRaiseTo || +slider.value > a.maxRaiseTo) slider.value = a.minRaiseTo;
-      $('raiseAmt').textContent = '加注至 ' + slider.value;
-      slider.oninput = () => { $('raiseAmt').textContent = '加注至 ' + slider.value; };
-    } else if (a.canRaise && a.maxRaiseTo === a.minRaiseTo) {
-      slider.disabled = true; rb.disabled = false; slider.value = a.maxRaiseTo; $('raiseAmt').textContent = '加注至 ' + a.maxRaiseTo;
-    } else { slider.disabled = true; rb.disabled = true; $('raiseAmt').textContent = '—'; }
+    setupBetPanel(state, me, a);
   } else {
     // 等待他人
     const p = state.players[state.currentTurn];
     if (p && state.phase !== 'waiting' && state.phase !== 'showdown') banner.textContent = '等待 ' + p.name + ' 行动…';
   }
+}
+
+// ================= 下注面板 =================
+let betVal = 0, betKey = '';
+function setupBetPanel(state, me, a) {
+  const panel = $('betPanel'), rb = $('raiseBtn');
+  const myBet = me ? me.bet : 0;
+  const toCall = Math.max(0, state.currentBet - myBet);
+  const pot = state.pot, bb = state.bigBlind;
+  if (!a.canRaise || a.maxRaiseTo <= a.minRaiseTo) { panel.classList.add('hidden'); rb.disabled = true; return; }
+  panel.classList.remove('hidden'); rb.disabled = false;
+  const min = a.minRaiseTo, max = a.maxRaiseTo;
+  const isBet = toCall === 0;
+
+  // 同一次决策内保留用户已选的额度；新决策重置为最小
+  const key = `${state.handId}|${state.phase}|${state.currentBet}|${myBet}`;
+  if (key !== betKey) { betKey = key; betVal = min; }
+
+  // 快捷尺寸：翻牌前未开池按大盲倍数，其余按底池比例
+  let sizes;
+  if (state.phase === 'preflop' && state.currentBet <= bb) {
+    sizes = [['2×BB', 2 * bb], ['2.5×BB', Math.round(2.5 * bb)], ['3×BB', 3 * bb], ['4×BB', 4 * bb]];
+  } else {
+    const base = pot + toCall; // 跟注后的底池
+    sizes = [['⅓池', base / 3], ['½池', base / 2], ['⅔池', base * 2 / 3], ['1×池', base], ['1.5×池', base * 1.5]]
+      .map(([l, v]) => [l, state.currentBet + Math.round(v)]);
+  }
+  const qs = $('quickSizes'); qs.innerHTML = '';
+  const chip = (label, v, cls) => {
+    const b = document.createElement('button');
+    b.className = 'qs' + (cls ? ' ' + cls : ''); b.textContent = label; b.dataset.v = v;
+    b.disabled = !(v >= min && v <= max);
+    b.onclick = () => { Sfx.play('click'); setBet(v); };
+    qs.appendChild(b);
+  };
+  chip('最小', min, 'edge');
+  for (const [l, v] of sizes) chip(l, v);
+  chip('全下', max, 'edge');
+
+  const slider = $('raiseSlider'), input = $('betInput');
+  slider.min = min; slider.max = max; slider.step = 1;
+  input.min = min; input.max = max;
+
+  function setBet(v) {
+    v = Math.round(+v); if (isNaN(v)) v = min;
+    v = Math.max(min, Math.min(max, v));
+    betVal = v;
+    slider.value = v; input.value = v;
+    rb.textContent = (v === max ? '全下 ' : isBet ? '下注 ' : '加注至 ') + v;
+    $('betHint').textContent = `再投入 ${v - myBet} · 可选范围 ${min} ~ ${max}`;
+    qs.querySelectorAll('.qs').forEach(b => b.classList.toggle('active', +b.dataset.v === v));
+  }
+  slider.oninput = () => setBet(slider.value);
+  input.oninput = () => { const v = +input.value; if (!isNaN(v) && v >= min && v <= max) setBet(v); };
+  input.onchange = () => setBet(input.value);
+  input.onkeydown = e => { if (e.key === 'Enter') { setBet(input.value); rb.click(); } };
+  $('betMinus').onclick = () => { Sfx.play('click'); setBet(betVal - bb); };
+  $('betPlus').onclick = () => { Sfx.play('click'); setBet(betVal + bb); };
+  setBet(betVal);
 }
 
 function updateBotBtns(state) {
@@ -353,7 +403,7 @@ $('actionControls').querySelectorAll('.act').forEach(b => {
   b.onclick = () => {
     const act = b.dataset.act;
     Sfx.play('click');
-    if (act === 'raise') socket.emit('action', { type: 'raise', amount: +$('raiseSlider').value });
+    if (act === 'raise') socket.emit('action', { type: 'raise', amount: betVal });
     else socket.emit('action', { type: act });
   };
 });

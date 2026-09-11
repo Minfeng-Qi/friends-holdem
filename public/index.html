@@ -56,15 +56,23 @@
           <span id="waitHint" class="wait-hint"></span>
         </div>
         <div class="action-controls hidden" id="actionControls">
-          <button class="act fold" data-act="fold">弃牌</button>
-          <button class="act check" data-act="check">看牌</button>
-          <button class="act call" data-act="call">跟注</button>
-          <div class="raise-box">
-            <input type="range" id="raiseSlider" />
-            <div class="raise-info"><span id="raiseAmt">—</span></div>
-            <button class="act raise" data-act="raise">加注</button>
+          <div class="act-row">
+            <button class="act fold" data-act="fold">弃牌</button>
+            <button class="act check" data-act="check">看牌</button>
+            <button class="act call" data-act="call">跟注</button>
+            <button class="act allin" data-act="allin">全下</button>
           </div>
-          <button class="act allin" data-act="allin">全下</button>
+          <div class="bet-panel" id="betPanel">
+            <div class="quick-sizes" id="quickSizes"></div>
+            <div class="bet-editor">
+              <button class="step" id="betMinus" title="减一个大盲">−</button>
+              <input type="number" id="betInput" inputmode="numeric" />
+              <button class="step" id="betPlus" title="加一个大盲">+</button>
+              <input type="range" id="raiseSlider" />
+              <button class="act raise" data-act="raise" id="raiseBtn">加注至 —</button>
+            </div>
+            <div class="bet-hint" id="betHint"></div>
+          </div>
         </div>
         <div class="side-controls">
           <button id="sitOutBtn" class="mini">暂离一局</button>

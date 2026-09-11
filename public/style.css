@@ -156,7 +156,8 @@ button { font-family: inherit; }
 .turn-banner { font-size: 13px; color: var(--gold); font-weight: 600; min-height: 18px; }
 .waiting-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
 .wait-hint { color: var(--muted); font-size: 13px; }
-.action-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.action-controls { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.act-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .act { padding: 13px 22px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; color: #fff; transition: transform .1s, filter .15s; box-shadow: 0 6px 14px rgba(0,0,0,.3); }
 .act:hover { filter: brightness(1.1); transform: translateY(-1px); }
 .act:active { transform: translateY(0); }
@@ -166,9 +167,6 @@ button { font-family: inherit; }
 .act.raise { background: linear-gradient(180deg,#d8912f,#b5751f); }
 .act.allin { background: linear-gradient(180deg,#d1493c,#a5342a); }
 .act:disabled { opacity: .3; cursor: not-allowed; filter: none; transform: none; box-shadow: none; }
-.raise-box { display: flex; align-items: center; gap: 10px; background: var(--panel); padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); }
-.raise-box input[type=range] { width: 140px; accent-color: var(--gold); }
-.raise-info { font-size: 13px; color: var(--gold); min-width: 78px; text-align: center; font-weight: 600; }
 .side-controls { display: flex; gap: 10px; }
 .btn-start { padding: 14px 30px; }
 
@@ -219,7 +217,6 @@ button { font-family: inherit; }
   .seat { width: 108px; }
   .seat .pname { max-width: 70px; }
   .act { padding: 11px 15px; font-size: 14px; }
-  .raise-box input[type=range] { width: 92px; }
   .controls { margin-top: 12px; }
 }
 
@@ -228,3 +225,26 @@ button { font-family: inherit; }
 .seat .voice-badge { position: absolute; right: 6px; bottom: 4px; font-size: 12px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
 .seat.speaking .plate { box-shadow: 0 0 0 2px var(--good), 0 0 18px rgba(55,192,122,.55); }
 .seat.speaking.turn .plate { box-shadow: 0 0 0 2px var(--good), 0 0 20px rgba(55,192,122,.6); }
+
+/* 下注面板 */
+.bet-panel { display: flex; flex-direction: column; gap: 9px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; width: min(90vw, 860px); box-shadow: 0 8px 22px rgba(0,0,0,.35); }
+.quick-sizes { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.qs { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .12s, background .12s; }
+.qs:hover:not(:disabled) { border-color: var(--gold); }
+.qs.active { background: linear-gradient(180deg,#caa24a,#a9812f); color: #201800; border-color: var(--gold); }
+.qs.edge { color: var(--muted); }
+.qs.edge.active { color: #201800; }
+.qs:disabled { opacity: .28; cursor: not-allowed; }
+.bet-editor { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.step { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); font-size: 20px; line-height: 1; cursor: pointer; }
+.step:hover { border-color: var(--gold); }
+#betInput { width: 118px; padding: 8px 10px; border-radius: 10px; border: 1px solid #33465c; background: #0d1826; color: var(--gold); font-weight: 800; font-size: 17px; text-align: center; outline: none; -moz-appearance: textfield; }
+#betInput::-webkit-inner-spin-button, #betInput::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#betInput:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(240,206,116,.15); }
+.bet-editor input[type=range] { flex: 1; min-width: 150px; accent-color: var(--gold); }
+#raiseBtn { min-width: 160px; }
+.bet-hint { text-align: center; font-size: 12px; color: var(--muted); }
+@media (max-width: 760px) {
+  .bet-editor input[type=range] { order: 5; flex-basis: 100%; }
+  #raiseBtn { order: 6; flex-basis: 100%; }
+}
