@@ -29,9 +29,10 @@
 <!-- 牌桌 -->
 <div id="game" class="game hidden">
   <header class="topbar">
-    <div class="room-info">房间 <b id="roomCode">—</b> · <button id="copyLink" class="mini">复制邀请链接</button></div>
+    <div class="room-info">房间 <b id="roomCode">—</b> · <button id="copyLink" class="mini">🔗 邀请</button></div>
     <div class="phase-pill" id="phaseLabel">等待开始</div>
     <div class="topbar-right">
+      <button id="chatToggle" class="mini icon-btn only-mobile" title="聊天/记录">💬</button>
       <button id="voiceBtn" class="mini icon-btn" title="开启语音">🎙️</button>
       <button id="soundBtn" class="mini icon-btn" title="音效开关">🔊</button>
       <button id="leaveBtn" class="mini danger">离开</button>
@@ -101,6 +102,7 @@
     </aside>
   </div>
 
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
   <div id="fx"></div>
   <canvas id="confetti"></canvas>
   <div id="toast" class="toast hidden"></div>

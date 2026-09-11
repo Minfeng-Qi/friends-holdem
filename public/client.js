@@ -54,7 +54,13 @@ $('copyLink').onclick = () => {
   navigator.clipboard?.writeText(url).then(() => toast('邀请链接已复制')).catch(() => toast(url));
 };
 function refreshSoundBtn() { $('soundBtn').textContent = Sfx.isEnabled() ? '🔊' : '🔇'; }
-$('soundBtn').onclick = () => { Sfx.setEnabled(!Sfx.isEnabled()); refreshSoundBtn(); if (Sfx.isEnabled()) Sfx.play('click'); };
+$('soundBtn').onclick = () => { Sfx.setEnabled(!Sfx.isEnabled()); refreshSoundBtn();
+
+// 手机端：聊天/记录抽屉
+const _sidebar = document.querySelector('.sidebar');
+function openSidebar(o) { if (_sidebar) _sidebar.classList.toggle('open', o); const bd = $('sidebarBackdrop'); if (bd) bd.classList.toggle('show', o); }
+if ($('chatToggle')) $('chatToggle').onclick = () => openSidebar(!_sidebar.classList.contains('open'));
+if ($('sidebarBackdrop')) $('sidebarBackdrop').onclick = () => openSidebar(false); if (Sfx.isEnabled()) Sfx.play('click'); };
 refreshSoundBtn();
 
 // ================= 卡牌 =================
@@ -84,10 +90,15 @@ function avatarFor(name) {
 }
 
 // 座位布局（本人固定下方）
-const SLOTS = [
+const SLOTS_DESKTOP = [
   { left: '50%', top: '99%' }, { left: '8%', top: '80%' }, { left: '8%', top: '20%' },
   { left: '50%', top: '1%' }, { left: '92%', top: '20%' }, { left: '92%', top: '80%' },
 ];
+const SLOTS_MOBILE = [
+  { left: '50%', top: '88%' }, { left: '16%', top: '64%' }, { left: '16%', top: '30%' },
+  { left: '50%', top: '8%' }, { left: '84%', top: '30%' }, { left: '84%', top: '64%' },
+];
+const slots = () => (window.innerWidth <= 760 ? SLOTS_MOBILE : SLOTS_DESKTOP);
 
 function render(state) {
   myState = state;
@@ -131,7 +142,7 @@ function render(state) {
   for (let i = 0; i < state.maxSeats; i++) {
     const actual = (mySeat + i) % state.maxSeats;
     const p = state.players[actual];
-    const slot = SLOTS[i];
+    const slot = slots()[i];
     const seat = document.createElement('div');
     seat.className = 'seat'; seat.style.left = slot.left; seat.style.top = slot.top;
     if (!p) { seat.classList.add('empty'); seat.innerHTML = '<div class="plate"><div class="pname">空位</div></div>'; seatsEl.appendChild(seat); continue; }
@@ -457,5 +468,6 @@ socket.on('connect', () => { if (currentRoom) { firstRender = true; socket.emit(
 
 let toastTimer;
 function toast(t) { const el = $('toast'); el.textContent = t; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2200); }
+let __rz; window.addEventListener('resize', () => { clearTimeout(__rz); __rz = setTimeout(() => { if (myState) render(myState); }, 150); });
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
