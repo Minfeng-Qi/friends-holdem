@@ -44,8 +44,17 @@ class Table {
   // ---------- 座位管理 ----------
   addPlayer(id, name) {
     if (this.findSeat(id) !== -1) return { ok: true, seat: this.findSeat(id) };
-    const seat = this.seats.findIndex(s => s === null);
-    if (seat === -1) return { ok: false, error: '牌桌已满' };
+    let seat = this.seats.findIndex(s => s === null);
+    if (seat === -1) {
+      // 满座时给真人腾位：先让一个不在本局的机器人下场，其次回收已掉线且不在本局的座位
+      let victim = this.seats.findIndex(s => s && s.isBot && !s.inHand);
+      if (victim === -1) victim = this.seats.findIndex(s => s && !s.isBot && !s.connected && !s.inHand);
+      if (victim === -1) return { ok: false, error: '牌桌已满，等这局结束再加入' };
+      const old = this.seats[victim];
+      this.pushLog(`${old.name} 让出座位`);
+      this.seats[victim] = null;
+      seat = victim;
+    }
     this.seats[seat] = {
       id, name,
       seat,
