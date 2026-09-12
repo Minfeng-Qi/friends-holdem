@@ -237,6 +237,13 @@ button { font-family: inherit; }
 #raiseBtn { min-width: 160px; }
 .bet-hint { text-align: center; font-size: 12px; color: var(--muted); }
 
+/* 行动倒计时 */
+.seat .timer { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); background: #0d1826; border: 1px solid var(--gold); color: var(--gold); font-size: 11px; font-weight: 700; padding: 1px 9px 2px; border-radius: 10px; min-width: 44px; text-align: center; overflow: hidden; z-index: 3; }
+.seat .timer .tbar { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--gold); width: 100%; transition: width .25s linear; }
+.seat .timer.urgent { border-color: var(--danger); color: #ff9c94; animation: urgentPulse .6s ease-in-out infinite; }
+.seat .timer.urgent .tbar { background: var(--danger); }
+@keyframes urgentPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(232,87,75,.45); } 50% { box-shadow: 0 0 0 5px rgba(232,87,75,0); } }
+
 @media (max-width: 760px) {
   .topbar { padding: 8px 10px; gap: 6px; }
   .room-info { font-size: 11px; }
@@ -278,6 +285,7 @@ button { font-family: inherit; }
   .seat .pos-pill { font-size: 9px; padding: 1px 5px; left: -6px; top: -6px; }
   .seat .tag { font-size: 9px; padding: 1px 5px; margin: 2px 1px 0; }
   .seat .voice-badge { font-size: 11px; }
+  .seat .timer { font-size: 10px; bottom: -11px; min-width: 38px; }
   .community { gap: 4px; min-height: 58px; }
   .pot { font-size: 13px; padding: 5px 12px; }
   .result { font-size: 11px; max-width: 84%; }

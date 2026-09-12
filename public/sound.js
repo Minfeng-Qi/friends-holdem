@@ -56,6 +56,7 @@ const Sfx = (() => {
     win()   { const notes = [523, 659, 784, 1046]; notes.forEach((f, i) => tone(f, 0.5, { type: 'triangle', gain: 0.14, when: i*0.09 })); },
     turn()  { tone(880, 0.12, { type: 'sine', gain: 0.14 }); tone(1174, 0.14, { type: 'sine', gain: 0.12, when: 0.13 }); },
     click() { tone(600, 0.04, { type: 'square', gain: 0.05 }); },
+    tick()  { tone(1500, 0.05, { type: 'sine', gain: 0.07 }); },
   };
 
   function play(name) {

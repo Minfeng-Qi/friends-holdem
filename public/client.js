@@ -14,6 +14,7 @@ let myState = null, mySeat = 0, currentRoom = '';
 
 // 渲染间的状态差异追踪
 let firstRender = true;
+let turnLocalDeadline = null, turnSecondsCfg = 30, lastTickSec = -1;
 let prev = { handId: 0, communityLen: 0, log: [], phase: 'waiting', myTurn: false };
 
 // ================= 大厅 =================
@@ -102,6 +103,8 @@ const slots = () => (window.innerWidth <= 760 ? SLOTS_MOBILE : SLOTS_DESKTOP);
 
 function render(state) {
   myState = state;
+  turnLocalDeadline = (state.turnRemainingMs != null) ? Date.now() + state.turnRemainingMs : null;
+  turnSecondsCfg = state.turnSeconds || 30;
   const me = state.players.find(p => p && p.id === playerId);
   mySeat = me ? me.seat : 0;
 
@@ -180,6 +183,13 @@ function render(state) {
     if (p.isBot) tags += '<span class="tag bot">🤖</span>';
     if (p.id === playerId) tags += '<span class="tag me">你</span>';
     if (tags) { const t = document.createElement('div'); t.innerHTML = tags; plate.appendChild(t); }
+    if (p.isTurn && turnLocalDeadline) {
+      const rem = Math.max(0, turnLocalDeadline - Date.now());
+      const sec = Math.ceil(rem / 1000), pct = Math.min(100, 100 * rem / (turnSecondsCfg * 1000));
+      const tm = document.createElement('div'); tm.className = 'timer' + (sec <= 10 ? ' urgent' : '');
+      tm.innerHTML = `<span class="tnum">${sec}</span><i class="tbar" style="width:${pct.toFixed(1)}%"></i>`;
+      plate.appendChild(tm);
+    }
     seat.appendChild(plate);
     seatsEl.appendChild(seat);
   }
@@ -198,7 +208,7 @@ function render(state) {
     processLogEvents(fresh, state);
     // 轮到你
     const myTurn = !!state.actions;
-    if (myTurn && !prev.myTurn) { Sfx.play('turn'); if (navigator.vibrate) try { navigator.vibrate(60); } catch {} }
+    if (myTurn && !prev.myTurn) { Sfx.play('turn'); lastTickSec = -1; if (navigator.vibrate) try { navigator.vibrate(60); } catch {} }
     // 摊牌 -> 获胜特效
     if (state.phase === 'showdown' && prev.phase !== 'showdown' && state.lastResult) winEffects(state);
   } else {
@@ -479,6 +489,23 @@ socket.on('connect', () => { if (currentRoom) { firstRender = true; socket.emit(
 
 let toastTimer;
 function toast(t) { const el = $('toast'); el.textContent = t; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.add('hidden'), 2200); }
+// 倒计时刷新（服务器判定超时，这里只负责显示与提示）
+setInterval(() => {
+  if (!turnLocalDeadline) return;
+  const rem = Math.max(0, turnLocalDeadline - Date.now());
+  const sec = Math.ceil(rem / 1000);
+  const el = document.querySelector('.seat.turn .timer');
+  if (el) {
+    el.querySelector('.tnum').textContent = sec;
+    el.querySelector('.tbar').style.width = Math.min(100, 100 * rem / (turnSecondsCfg * 1000)).toFixed(1) + '%';
+    el.classList.toggle('urgent', sec <= 10);
+  }
+  if (myState && myState.actions) {
+    $('turnBanner').textContent = `🎯 轮到你了！ ${sec}s`;
+    if (sec <= 10 && sec > 0 && sec !== lastTickSec) { Sfx.play('tick'); lastTickSec = sec; }
+  }
+}, 250);
+
 let __rz; window.addEventListener('resize', () => { clearTimeout(__rz); __rz = setTimeout(() => { if (myState) render(myState); }, 150); });
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }

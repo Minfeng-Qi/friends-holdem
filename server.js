@@ -29,12 +29,55 @@ function getRoom(code) {
   return rooms.get(code);
 }
 
+// 每次行动的时限（秒），可用环境变量 TURN_SECONDS 调整
+const TURN_SECONDS = Math.max(10, parseInt(process.env.TURN_SECONDS || '30', 10) || 30);
+const TURN_MS = TURN_SECONDS * 1000;
+
+// 轮到真人时启动倒计时；到时未操作则自动弃牌(有注要跟)或看牌
+function armTurnTimer(code) {
+  const r = rooms.get(code);
+  if (!r) return;
+  const t = r.table;
+  const betting = t.phase !== 'waiting' && t.phase !== 'showdown';
+  const cur = betting ? t.seats[t.currentTurn] : null;
+  const key = (betting && cur) ? `${t.handId}:${t.currentTurn}:${t.phase}:${t.currentBet}` : null;
+  // 同一个人同一次决策：不重置已在走的计时
+  if (key && r.turnKey === key && r.turnTimer) return;
+  if (r.turnTimer) { clearTimeout(r.turnTimer); r.turnTimer = null; }
+  r.turnKey = key; r.turnDeadline = null;
+  if (!cur || cur.isBot || !cur.inHand || cur.allIn) return;
+  r.turnDeadline = Date.now() + TURN_MS;
+  r.turnTimer = setTimeout(() => {
+    r.turnTimer = null;
+    if (rooms.get(code) !== r) return;
+    const c = t.seats[t.currentTurn];
+    const nowKey = `${t.handId}:${t.currentTurn}:${t.phase}:${t.currentBet}`;
+    if (nowKey !== key || !c || c.isBot) return; // 局面已变，作废
+    const toCall = t.currentBet - c.bet;
+    const type = toCall > 0 ? 'fold' : 'check';
+    const res = t.act(c.id, type);
+    if (res.ok) {
+      const what = type === 'fold' ? '弃牌' : '看牌';
+      t.pushLog(`${c.name} 超时，已自动${what}`);
+      r.chat.push({ sys: true, text: `${c.name} 超时未操作，已自动${what}`, t: Date.now() });
+      broadcastChat(code);
+    }
+    broadcastState(code);
+    maybeDriveBots(code);
+  }, TURN_MS);
+}
+
 function broadcastState(code) {
   const room = rooms.get(code);
   if (!room) return;
+  armTurnTimer(code);
+  const remaining = room.turnDeadline ? Math.max(0, room.turnDeadline - Date.now()) : null;
   for (const [pid, info] of room.players) {
     if (!info.socketId) continue;
-    io.to(info.socketId).emit('state', room.table.getStateFor(pid));
+    const st = room.table.getStateFor(pid);
+    st.turnRemainingMs = remaining;
+    st.turnSeconds = TURN_SECONDS;
+    io.to(info.socketId).emit('state', st);
   }
 }
 
@@ -284,7 +327,7 @@ io.on('connection', (socket) => {
     broadcastState(joinedRoom);
     broadcastChat(joinedRoom);
     // 空房间清理
-    if (r.table.activePlayers().length === 0) rooms.delete(joinedRoom);
+    if (r.table.activePlayers().length === 0) { if (r.turnTimer) clearTimeout(r.turnTimer); rooms.delete(joinedRoom); }
     joinedRoom = null; playerId = null;
   }
 });
